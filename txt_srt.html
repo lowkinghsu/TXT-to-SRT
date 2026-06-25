@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TXT 轉 SRT 批次轉檔大師 - 快速、安全、全本地端處理</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- JSZip CDN 用于打包多文件下载 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* 自訂滾動條樣式 */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #1e293b;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #475569;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #64748b;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
+
+  <!-- 頂部導覽列 -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-40 px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <div class="bg-indigo-600 p-2 rounded-lg text-white shadow-md shadow-indigo-500/20">
+        <i data-lucide="file-text" class="w-6 h-6"></i>
+      </div>
+      <div>
+        <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+          TXT 轉 SRT 批次轉檔大師
+        </h1>
+        <p class="text-xs text-slate-400">100% 本地瀏覽器安全運算 • 支援 20+ 檔案一鍵打包</p>
+      </div>
+    </div>
+    <div class="flex items-center space-x-2 text-xs bg-slate-800 border border-slate-700 rounded-full px-3 py-1.5 text-emerald-400 font-medium">
+      <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse mr-1"></span>
+      離線安全模式開啟
+    </div>
+  </header>
+
+  <!-- 主區塊 -->
+  <main class="flex-1 w-full max-w-7xl mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+    
+    <!-- 左側控制面板 (佔 4 格) -->
+    <section class="lg:col-span-4 flex flex-col space-y-6">
+      
+      <!-- 上傳區域 -->
+      <div class="bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-xl relative overflow-hidden group">
+        <div class="absolute -right-10 -top-10 w-32 h-32 bg-indigo-600/10 rounded-full blur-2xl"></div>
+        <h3 class="text-md font-semibold text-slate-200 mb-3 flex items-center">
+          <i data-lucide="upload-cloud" class="w-5 h-5 mr-2 text-indigo-400"></i>匯入 TXT 檔案
+        </h3>
+        
+        <!-- 拖曳區域 -->
+        <div id="drop-zone" class="border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-xl p-6 text-center cursor-pointer transition-all duration-300 bg-slate-950/50 group-hover:bg-slate-950">
+          <input type="file" id="file-input" multiple accept=".txt,.srt" class="hidden">
+          <div class="flex flex-col items-center justify-center space-y-3">
+            <div class="p-3 bg-slate-900 rounded-full text-slate-400 group-hover:text-indigo-400 transition-colors duration-300">
+              <i data-lucide="folder-open" class="w-8 h-8"></i>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-slate-300">拖曳 TXT 檔案至此處，或 <span class="text-indigo-400">點擊瀏覽</span></p>
+              <p class="text-xs text-slate-500 mt-1">支援同時選取 20 個以上的多個檔案</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 參數設定卡片 -->
+      <div class="bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-xl flex-1 flex flex-col justify-between">
+        <div>
+          <h3 class="text-md font-semibold text-slate-200 mb-4 flex items-center border-b border-slate-800 pb-2">
+            <i data-lucide="sliders" class="w-5 h-5 mr-2 text-indigo-400"></i>時間軸設定
+          </h3>
+
+          <div class="space-y-5">
+            <!-- 轉檔處理模式 -->
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">轉檔處理模式</label>
+              <div class="grid grid-cols-2 gap-2">
+                <button id="mode-auto" class="px-3 py-2 text-xs rounded-lg bg-indigo-600 text-white font-medium border border-indigo-500 transition-all font-semibold" onclick="setConversionMode('auto')">
+                  自動智慧辨識 (推薦)
+                </button>
+                <button id="mode-force" class="px-3 py-2 text-xs rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition-all font-semibold" onclick="setConversionMode('force')">
+                  強制重新生成時間
+                </button>
+              </div>
+              <p class="text-[10px] text-slate-500 mt-1.5" id="mode-hint">智慧辨識：支援原創 SRT 格式及 Audacity/ELAN 逗號或 Tab 分隔時間軸，能精準保留雙語對照文字！</p>
+            </div>
+
+            <div id="generator-settings-panel" class="space-y-4 pt-2 border-t border-slate-800/60 opacity-50">
+              <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">純文字時間生成器設定 (當檔案無時間軸時生效)</span>
+              
+              <!-- 切割模式 -->
+              <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">TXT 切割規則</label>
+                <div class="grid grid-cols-2 gap-2">
+                  <button id="split-line" class="px-3 py-2 text-sm rounded-lg bg-indigo-600 text-white font-medium border border-indigo-500 transition-all" onclick="setSplitMode('line')">
+                    逐行切割
+                  </button>
+                  <button id="split-paragraph" class="px-3 py-2 text-sm rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition-all" onclick="setSplitMode('paragraph')">
+                    空白行切割 (段落)
+                  </button>
+                </div>
+                <p class="text-[10px] text-slate-500 mt-1.5" id="split-hint">每一行文字皆會轉換為獨立的一句字幕。</p>
+              </div>
+
+              <!-- 時間軸產生策略 -->
+              <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">字幕時間估算策略</label>
+                <div class="grid grid-cols-2 gap-2">
+                  <button id="strategy-dynamic" class="px-3 py-2 text-sm rounded-lg bg-indigo-600 text-white font-medium border border-indigo-500 transition-all" onclick="setStrategy('dynamic')">
+                    智慧字數估算
+                  </button>
+                  <button id="strategy-fixed" class="px-3 py-2 text-sm rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition-all" onclick="setStrategy('fixed')">
+                    固定秒數
+                  </button>
+                </div>
+                <p class="text-[10px] text-slate-500 mt-1.5" id="strategy-hint">根據文字長短動態計算顯示時長，閱讀更舒適自然。</p>
+              </div>
+
+              <!-- 智慧時間戳解析 -->
+              <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                <label class="flex items-center space-x-2.5 cursor-pointer">
+                  <input type="checkbox" id="parse-timestamps" checked class="w-4 h-4 rounded text-indigo-600 bg-slate-900 border-slate-700 focus:ring-indigo-500 focus:ring-offset-slate-950">
+                  <span class="text-xs font-medium text-slate-300">自動偵測文字內單點時間戳記</span>
+                </label>
+                <p class="text-[10px] text-slate-500 mt-1 pl-6.5">
+                  若行首包含時間如 <code class="text-indigo-400">[00:12]</code> 或 <code class="text-indigo-400">(01:23.50)</code>，會自動讀取並以此為起點。
+                </p>
+              </div>
+
+              <!-- 動態參數輸入區 -->
+              <div id="dynamic-params-panel" class="space-y-3.5 bg-slate-950 p-3.5 rounded-lg border border-slate-800">
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">每字耗時 (毫秒)</label>
+                    <input type="number" id="param-ms-per-char" value="180" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-100 focus:outline-none focus:border-indigo-500">
+                  </div>
+                  <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">字幕間隙 (毫秒)</label>
+                    <input type="number" id="param-gap" value="100" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-100 focus:outline-none focus:border-indigo-500">
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">單句最短 (秒)</label>
+                    <input type="number" id="param-min-sec" value="1.5" step="0.1" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-100 focus:outline-none focus:border-indigo-500">
+                  </div>
+                  <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">單句最長 (秒)</label>
+                    <input type="number" id="param-max-sec" value="6.5" step="0.1" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-100 focus:outline-none focus:border-indigo-500">
+                  </div>
+                </div>
+              </div>
+
+              <div id="fixed-params-panel" class="hidden space-y-3.5 bg-slate-950 p-3.5 rounded-lg border border-slate-800">
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">單句固定秒數</label>
+                    <input type="number" id="param-fixed-sec" value="3.0" step="0.5" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-100 focus:outline-none focus:border-indigo-500">
+                  </div>
+                  <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">字幕間隙 (毫秒)</label>
+                    <input type="number" id="param-fixed-gap" value="100" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-100 focus:outline-none focus:border-indigo-500">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 時間偏移量 -->
+            <div class="pt-3 border-t border-slate-800/60">
+              <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">整體時間微調偏移量 (格式: 時:分:秒,毫秒)</label>
+              <input type="text" id="param-start-offset" value="00:00:00,000" placeholder="00:00:00,000" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-2 text-xs text-slate-100 font-mono focus:outline-none focus:border-indigo-500">
+              <p class="text-[10px] text-slate-500 mt-1">例如設定為 00:00:01,200 可將所有字幕集體延後 1.2 秒。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-6 border-t border-slate-800 mt-6 space-y-2">
+          <button id="btn-convert-all" class="w-full bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-semibold py-3 px-4 rounded-xl shadow-lg shadow-indigo-600/20 active:scale-[0.98] transition-all flex items-center justify-center space-x-2" onclick="processAllFiles()">
+            <i data-lucide="zap" class="w-5 h-5"></i>
+            <span>開始批次轉檔</span>
+          </button>
+          <button id="btn-clear-all" class="w-full bg-slate-800/50 hover:bg-slate-800 text-slate-400 hover:text-slate-200 font-medium py-2 px-4 rounded-xl transition-all text-xs" onclick="clearAllFiles()">
+            清空所有檔案列表
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 右側檔案列表與下載 (佔 8 格) -->
+    <section class="lg:col-span-8 flex flex-col space-y-6">
+      
+      <!-- 列表卡片 -->
+      <div class="bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-xl flex flex-col h-full min-h-[500px]">
+        
+        <!-- 列表首部與控制 -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 pb-4 mb-4 gap-3">
+          <div class="flex items-center space-x-2.5">
+            <h3 class="text-md font-semibold text-slate-200">
+              待轉換檔案清單
+            </h3>
+            <span id="file-count" class="bg-slate-800 border border-slate-700 text-slate-300 text-xs font-semibold px-2.5 py-0.5 rounded-full">
+              0 個檔案
+            </span>
+          </div>
+          
+          <!-- 批次下載按鈕 -->
+          <button id="btn-download-zip" disabled class="disabled:opacity-40 disabled:pointer-events-none bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-semibold py-2 px-4 rounded-xl shadow-lg shadow-emerald-600/10 active:scale-[0.98] transition-all text-sm flex items-center justify-center space-x-2" onclick="downloadAllAsZip()">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span>下載全部 SRT (.zip)</span>
+          </button>
+        </div>
+
+        <!-- 空列表提示 -->
+        <div id="empty-state" class="flex-1 flex flex-col items-center justify-center text-center p-8">
+          <div class="w-16 h-16 bg-slate-950 rounded-full border border-slate-800 flex items-center justify-center text-slate-500 mb-4">
+            <i data-lucide="files" class="w-8 h-8"></i>
+          </div>
+          <p class="text-slate-400 font-medium">尚未加入任何 TXT 檔案</p>
+          <p class="text-xs text-slate-600 mt-1 max-w-sm">請使用左上角區域，將多個 TXT 檔拖曳或選取上傳，系統將自動處理。</p>
+        </div>
+
+        <!-- 檔案列表 -->
+        <div id="file-list-container" class="hidden flex-1 overflow-y-auto max-h-[500px] space-y-2 pr-1">
+          <!-- 檔案列會在這裡動態渲染 -->
+        </div>
+
+        <!-- 底部統計欄 -->
+        <div id="list-footer" class="hidden border-t border-slate-800 pt-4 mt-4 flex items-center justify-between text-xs text-slate-400">
+          <div class="flex space-x-4">
+            <span>成功: <span id="stat-success" class="text-emerald-400 font-semibold">0</span></span>
+            <span>失敗: <span id="stat-error" class="text-rose-400 font-semibold">0</span></span>
+            <span>未處理: <span id="stat-pending" class="text-slate-400 font-semibold">0</span></span>
+          </div>
+          <span id="stat-total">總計: 0 個檔案</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 預覽彈出視窗 (Modal) -->
+  <div id="preview-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden animate-in fade-in duration-200">
+      
+      <!-- 模態框首部 -->
+      <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/50">
+        <div>
+          <span class="text-xs font-semibold uppercase tracking-wider text-indigo-400">字幕轉換預覽</span>
+          <h4 id="preview-filename" class="text-lg font-bold text-slate-200 truncate max-w-lg mt-0.5">filename.txt</h4>
+        </div>
+        <button class="text-slate-400 hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-800 transition" onclick="closePreviewModal()">
+          <i data-lucide="x" class="w-6 h-6"></i>
+        </button>
+      </div>
+
+      <!-- 模態框主要內容 -->
+      <div class="flex-1 grid grid-cols-1 md:grid-cols-2 overflow-hidden bg-slate-950">
+        
+        <!-- 左邊: TXT 原始內容 -->
+        <div class="flex flex-col border-r border-slate-800 h-full overflow-hidden">
+          <div class="px-4 py-2 border-b border-slate-800 bg-slate-900/30 flex items-center justify-between text-xs text-slate-400">
+            <span>原始文字 (TXT)</span>
+            <span id="preview-txt-lines">0 個區段</span>
+          </div>
+          <textarea id="preview-txt-box" readonly class="flex-1 p-4 bg-slate-950 text-slate-300 font-mono text-xs overflow-y-auto outline-none resize-none scroll-smooth"></textarea>
+        </div>
+
+        <!-- 右邊: SRT 生成內容 -->
+        <div class="flex flex-col h-full overflow-hidden">
+          <div class="px-4 py-2 border-b border-slate-800 bg-slate-900/30 flex items-center justify-between text-xs text-slate-400">
+            <span>產出的字幕檔案 (SRT)</span>
+            <button class="text-indigo-400 hover:text-indigo-300 font-medium flex items-center space-x-1" onclick="copySrtToClipboard()">
+              <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+              <span>複製全文</span>
+            </button>
+          </div>
+          <textarea id="preview-srt-box" readonly class="flex-1 p-4 bg-slate-950 text-emerald-300 font-mono text-xs overflow-y-auto outline-none resize-none scroll-smooth"></textarea>
+        </div>
+      </div>
+
+      <!-- 模態框尾部 -->
+      <div class="px-6 py-4 border-t border-slate-800 flex justify-between items-center bg-slate-900/50 text-xs">
+        <span class="text-slate-400" id="preview-status-tip">小提示：多行對照字幕已完美收納在同一個時間區間中。</span>
+        <button class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2 px-4 rounded-lg transition" onclick="downloadSingleFromPreview()">
+          下載此 SRT 檔案
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast 通知容器 -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+  <footer class="border-t border-slate-900 bg-slate-950/80 px-6 py-4 text-center text-xs text-slate-500">
+    <p>© 2026 TXT to SRT 批次轉檔大師 • 保留所有權利 • 採用高效 HTML5 與純 JS 引擎加速</p>
+  </footer>
+
+  <script>
+    // 儲存所有上傳檔案狀態
+    let fileQueue = [];
+    let conversionMode = 'auto'; // 'auto' (自動保留時間與雙語) | 'force' (強制重估)
+    let splitMode = 'line'; // 'line' | 'paragraph'
+    let strategy = 'dynamic'; // 'dynamic' | 'fixed'
+    let activePreviewFileId = null;
+
+    // DOM 元素載入後初始化
+    window.addEventListener('DOMContentLoaded', () => {
+      // 初始化 Lucide 圖標
+      lucide.createIcons();
+
+      // 設置拖曳事件監聽
+      const dropZone = document.getElementById('drop-zone');
+      const fileInput = document.getElementById('file-input');
+
+      dropZone.addEventListener('click', () => fileInput.click());
+
+      dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('border-indigo-500', 'bg-slate-900/80');
+      });
+
+      dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('border-indigo-500', 'bg-slate-900/80');
+      });
+
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('border-indigo-500', 'bg-slate-900/80');
+        if (e.dataTransfer.files.length > 0) {
+          handleFileSelect(e.dataTransfer.files);
+        }
+      });
+
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+          handleFileSelect(e.target.files);
+        }
+      });
+    });
+
+    // 轉檔模式選擇
+    function setConversionMode(mode) {
+      conversionMode = mode;
+      const btnAuto = document.getElementById('mode-auto');
+      const btnForce = document.getElementById('mode-force');
+      const hint = document.getElementById('mode-hint');
+      const genSettings = document.getElementById('generator-settings-panel');
+
+      if (mode === 'auto') {
+        btnAuto.className = 'px-3 py-2 text-xs rounded-lg bg-indigo-600 text-white font-medium border border-indigo-500 transition-all font-semibold';
+        btnForce.className = 'px-3 py-2 text-xs rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition-all font-semibold';
+        hint.textContent = '智慧辨識：支援原創 SRT 格式及 Audacity/ELAN 逗號或 Tab 分隔時間軸，能精準保留雙語對照文字！';
+        genSettings.classList.add('opacity-50');
+      } else {
+        btnAuto.className = 'px-3 py-2 text-xs rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition-all font-semibold';
+        btnForce.className = 'px-3 py-2 text-xs rounded-lg bg-indigo-600 text-white font-medium border border-indigo-500 transition-all font-semibold';
+        hint.textContent = '強制重新生成：無視原來的時間軸區間，完全依下方字數或秒數演算法重新分配字幕長度。';
+        genSettings.classList.remove('opacity-50');
+      }
+    }
+
+    // 切割規則設定切換
+    function setSplitMode(mode) {
+      splitMode = mode;
+      const btnLine = document.getElementById('split-line');
+      const btnParagraph = document.getElementById('split-paragraph');
+      const hint = document.getElementById('split-hint');
+
+      if (mode === 'line') {
+        btnLine.className = 'px-3 py-2 text-sm rounded-lg bg-indigo-600 text-white font-medium border border-indigo-500 transition-all';
+        btnParagraph.className = 'px-3 py-2 text-sm rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition-all';
+        hint.textContent = '每一行文字皆會轉換為獨立的一句字幕。';
+      } else {
+        btnLine.className = 'px-3 py-2 text-sm rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition-all';
+        btnParagraph.className = 'px-3 py-2 text-sm rounded-lg bg-indigo-600 text-white font-medium border border-indigo-500 transition-all';
+        hint.textContent = '以空白行做為段落分界，每一整段落文字轉換為一句字幕。';
+      }
+    }
+
+    // 估算策略切換
+    function setStrategy(strat) {
+      strategy = strat;
+      const btnDyn = document.getElementById('strategy-dynamic');
+      const btnFixed = document.getElementById('strategy-fixed');
+      const hint = document.getElementById('strategy-hint');
+      const panelDyn = document.getElementById('dynamic-params-panel');
+      const panelFixed = document.getElementById('fixed-params-panel');
+
+      if (strat === 'dynamic') {
+        btnDyn.className = 'px-3 py-2 text-sm rounded-lg bg-indigo-600 text-white font-medium border border-indigo-500 transition-all';
+        btnFixed.className = 'px-3 py-2 text-sm rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition-all';
+        hint.textContent = '根據文字長短動態計算顯示時長，閱讀更舒適自然。';
+        panelDyn.classList.remove('hidden');
+        panelFixed.classList.add('hidden');
+      } else {
+        btnDyn.className = 'px-3 py-2 text-sm rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition-all';
+        btnFixed.className = 'px-3 py-2 text-sm rounded-lg bg-indigo-600 text-white font-medium border border-indigo-500 transition-all';
+        hint.textContent = '每句字幕一律固定顯示指定的時間秒數。';
+        panelDyn.classList.add('hidden');
+        panelFixed.classList.remove('hidden');
+      }
+    }
+
+    // 解析時間字串為毫秒 (相容逗號/點號、時分秒與純秒數等)
+    function parseSrtTimeToMs(timeStr) {
+      if (!timeStr) return 0;
+      try {
+        const trimmed = timeStr.trim();
+        // 1. 純秒數 (例如 2.600)
+        if (/^\d+(\.\d+)?$/.test(trimmed) || /^\d+(,\d+)?$/.test(trimmed)) {
+          const secVal = parseFloat(trimmed.replace(',', '.'));
+          return Math.round(secVal * 1000);
+        }
+        // 2. 時分秒點或逗號格式
+        const cleanStr = trimmed.replace(/\./g, ',');
+        const mainParts = cleanStr.split(',');
+        const hms = mainParts[0].split(':');
+        const msStr = mainParts[1] || '0';
+        
+        let hrs = 0, mins = 0, secs = 0;
+        if (hms.length === 3) {
+          hrs = parseInt(hms[0], 10) || 0;
+          mins = parseInt(hms[1], 10) || 0;
+          secs = parseInt(hms[2], 10) || 0;
+        } else if (hms.length === 2) {
+          mins = parseInt(hms[0], 10) || 0;
+          secs = parseInt(hms[1], 10) || 0;
+        } else if (hms.length === 1) {
+          secs = parseInt(hms[0], 10) || 0;
+        }
+
+        const ms = parseInt(msStr.padEnd(3, '0').substring(0, 3), 10) || 0;
+        return ((hrs * 3600) + (mins * 60) + secs) * 1000 + ms;
+      } catch (e) {
+        console.error('時間解析錯誤:', timeStr, e);
+        return 0;
+      }
+    }
+
+    // 解析包含 "-->" 或 Audacity "逗號分隔" 時間軸的算法
+    function parseSrtLike(content) {
+      const lines = content.split(/\r?\n/);
+      const blocks = [];
+      let currentBlock = null;
+
+      // 格式 A：標準 SRT 格式 (00:00:01,000 --> 00:00:03,800)
+      const srtRangeRegex = /^(\d{1,2}:\d{2}(?::\d{2})?(?:[,\.]\d{1,3})?)\s*-->\s*(\d{1,2}:\d{2}(?::\d{2})?(?:[,\.]\d{1,3})?)$/;
+      // 格式 B：Audacity / ELAN 逗號或 Tab/空白 分隔格式 (0:00:00.966,0:00:02.600)
+      const audacityRangeRegex = /^(\d{1,2}:\d{2}(?::\d{2})?[,\.]\d{1,3})\s*[\s\t,;]\s*(\d{1,2}:\d{2}(?::\d{2})?[,\.]\d{1,3})$/;
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue; // 跳過空行
+
+        const srtMatch = line.match(srtRangeRegex);
+        const audacityMatch = line.match(audacityRangeRegex);
+        const rangeMatch = srtMatch || audacityMatch;
+
+        if (rangeMatch) {
+          // 如果偵測到新時間軸
+          if (currentBlock) {
+            blocks.push(currentBlock);
+          }
+          currentBlock = {
+            startTimeStr: rangeMatch[1],
+            endTimeStr: rangeMatch[2],
+            textLines: []
+          };
+        } else {
+          if (currentBlock) {
+            // 排除單純的數字索引行 (如 SRT 常見的 "1", "2")
+            const isNumber = /^\d+$/.test(line);
+            if (isNumber) {
+              let nextTimecodeFound = false;
+              for (let j = i + 1; j < lines.length; j++) {
+                const nextLine = lines[j].trim();
+                if (!nextLine) continue;
+                if (srtRangeRegex.test(nextLine) || audacityRangeRegex.test(nextLine)) {
+                  nextTimecodeFound = true;
+                }
+                break;
+              }
+              if (nextTimecodeFound) {
+                blocks.push(currentBlock);
+                currentBlock = null;
+                continue;
+              }
+            }
+            // 將對應的雙語文字全部放入當前區塊中
+            currentBlock.textLines.push(lines[i].trim());
+          }
+        }
+      }
+
+      if (currentBlock) {
+        blocks.push(currentBlock);
+      }
+
+      return blocks.filter(b => b.textLines.length > 0);
+    }
+
+    // ELAN / Audacity 多層扁平格式智慧重組演算法 (避免時間軸重疊)
+    function mergeFlattenedBlocks(blocks) {
+      const soundTimePattern = /^\d+:\d+(?::\d+)?[\.,]\d+\s*[,;\/]\s*\d+:\d+(?::\d+)?[\.,]\d+$/;
+      
+      let soundBlockCount = 0;
+      blocks.forEach(b => {
+        if (b.textLines.length > 0 && soundTimePattern.test(b.textLines[0])) {
+          soundBlockCount++;
+        }
+      });
+
+      // 如果有超過 10% 的區塊內容是像 "0:00:00.900,0:00:03.166" 這種純音頻對齊記號，則啟用合併
+      const isFlattened = (soundBlockCount / blocks.length) > 0.1;
+
+      if (!isFlattened) {
+        return blocks; // 一般標準時間軸結構，直接回傳，不干擾原排序
+      }
+
+      const mergedBlocks = [];
+      let i = 0;
+      while (i < blocks.length) {
+        const block1 = blocks[i];
+        const text1 = block1.textLines[0];
+
+        if (soundTimePattern.test(text1)) {
+          const block2 = (i + 1 < blocks.length) ? blocks[i + 1] : null; 
+          const block3 = (i + 2 < blocks.length) ? blocks[i + 2] : null; 
+
+          if (block2 && block3 && !soundTimePattern.test(block2.textLines[0]) && !soundTimePattern.test(block3.textLines[0])) {
+            mergedBlocks.push({
+              startTimeStr: block1.startTimeStr,
+              endTimeStr: block1.endTimeStr,
+              textLines: [
+                ...block2.textLines,
+                ...block3.textLines
+              ]
+            });
+            i += 3; 
+          } else if (block2 && !soundTimePattern.test(block2.textLines[0])) {
+            mergedBlocks.push({
+              startTimeStr: block1.startTimeStr,
+              endTimeStr: block1.endTimeStr,
+              textLines: [
+                ...block2.textLines
+              ]
+            });
+            i += 2;
+          } else {
+            i += 1;
+          }
+        } else {
+          mergedBlocks.push(block1);
+          i += 1;
+        }
+      }
+
+      return mergedBlocks;
+    }
+
+    // 處理檔案匯入
+    function handleFileSelect(files) {
+      let countAdded = 0;
+      
+      const srtRangeRegexGlobal = /(\d{1,2}:\d{2}(?::\d{2})?(?:[,\.]\d{1,3})?)\s*-->\s*(\d{1,2}:\d{2}(?::\d{2})?(?:[,\.]\d{1,3})?)/;
+      const audacityRangeRegexGlobal = /(\d{1,2}:\d{2}(?::\d{2})?[,\.]\d{1,3})\s*[\s\t,;]\s*(\d{1,2}:\d{2}(?::\d{2})?[,\.]\d{1,3})/;
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (file.name.toLowerCase().endsWith('.txt') || file.name.toLowerCase().endsWith('.srt')) {
+          if (fileQueue.some(f => f.name === file.name && f.size === file.size)) {
+            continue;
+          }
+          
+          const fileObj = {
+            id: generateUUID(),
+            name: file.name,
+            size: file.size,
+            file: file,
+            rawContent: '',
+            srtContent: '',
+            status: 'pending', 
+            linesCount: 0,
+            errorMessage: '',
+            isSrtFormatDetected: false
+          };
+          
+          fileQueue.push(fileObj);
+          countAdded++;
+          
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            fileObj.rawContent = e.target.result;
+            
+            // 自動偵測是否帶有時間軸
+            fileObj.isSrtFormatDetected = srtRangeRegexGlobal.test(fileObj.rawContent) || audacityRangeRegexGlobal.test(fileObj.rawContent);
+            
+            if (fileObj.isSrtFormatDetected) {
+              let blocks = parseSrtLike(fileObj.rawContent);
+              blocks = mergeFlattenedBlocks(blocks); 
+              fileObj.linesCount = blocks.length;
+            } else {
+              const lines = fileObj.rawContent.split(/\r?\n/).filter(l => l.trim().length > 0);
+              fileObj.linesCount = lines.length;
+            }
+            updateFileListView();
+          };
+          reader.readAsText(file, 'UTF-8');
+        }
+      }
+      
+      if (countAdded > 0) {
+        showToast(`成功匯入 ${countAdded} 個檔案`, 'success');
+      } else {
+        showToast('無有效 TXT/SRT 檔案被新增', 'warning');
+      }
+      
+      updateFileListView();
+    }
+
+    // 更新檔案列表畫面
+    function updateFileListView() {
+      const container = document.getElementById('file-list-container');
+      const emptyState = document.getElementById('empty-state');
+      const fileCountBadge = document.getElementById('file-count');
+      const listFooter = document.getElementById('list-footer');
+      const btnZip = document.getElementById('btn-download-zip');
+
+      if (fileQueue.length === 0) {
+        container.classList.add('hidden');
+        emptyState.classList.remove('hidden');
+        listFooter.classList.add('hidden');
+        fileCountBadge.textContent = '0 個檔案';
+        btnZip.disabled = true;
+        return;
+      }
+
+      container.classList.remove('hidden');
+      emptyState.classList.add('hidden');
+      listFooter.classList.remove('hidden');
+      fileCountBadge.textContent = `${fileQueue.length} 個檔案`;
+
+      let successCount = 0;
+      let errorCount = 0;
+      let pendingCount = 0;
+
+      container.innerHTML = '';
+      
+      fileQueue.forEach((file) => {
+        if (file.status === 'success') successCount++;
+        else if (file.status === 'error') errorCount++;
+        else pendingCount++;
+
+        const item = document.createElement('div');
+        item.className = 'flex flex-col sm:flex-row sm:items-center justify-between p-3.5 bg-slate-950 rounded-xl border border-slate-800 hover:border-slate-700 transition-all gap-3';
+        
+        let statusBadge = '';
+        if (file.status === 'success') {
+          statusBadge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-950 text-emerald-400 border border-emerald-800"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5"></span>轉檔完成</span>';
+        } else if (file.status === 'error') {
+          statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-950 text-rose-400 border border-rose-800" title="${file.errorMessage}"><span class="w-1.5 h-1.5 rounded-full bg-rose-400 mr-1.5"></span>出錯: ${file.errorMessage}</span>`;
+        } else {
+          statusBadge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-800 text-slate-400 border border-slate-700">等待中</span>';
+        }
+
+        const sizeKb = (file.size / 1024).toFixed(1);
+        const formatLabel = file.isSrtFormatDetected 
+          ? '<span class="text-indigo-400 font-semibold bg-indigo-950/40 border border-indigo-900/50 px-1.5 py-0.2 rounded text-[10px]">自帶時間軸 (多行對照)</span>' 
+          : '<span class="text-slate-500 bg-slate-900 px-1.5 py-0.2 rounded text-[10px]">無時間軸純文字</span>';
+
+        item.innerHTML = `
+          <div class="flex items-center space-x-3 overflow-hidden">
+            <div class="flex-shrink-0 p-2 bg-slate-900 rounded-lg text-slate-400">
+              <i data-lucide="file-text" class="w-5 h-5"></i>
+            </div>
+            <div class="overflow-hidden">
+              <p class="text-sm font-semibold text-slate-200 truncate" title="${file.name}">${file.name}</p>
+              <div class="text-[11px] text-slate-500 mt-1 flex items-center space-x-2 flex-wrap gap-y-1">
+                <span>大小: ${sizeKb} KB</span>
+                <span>•</span>
+                <span>語句句數: ${file.linesCount || '讀取中...'}</span>
+                <span>•</span>
+                <span>${formatLabel}</span>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center space-x-3 justify-between sm:justify-end">
+            <div>${statusBadge}</div>
+            <div class="flex items-center space-x-1.5">
+              <button class="p-1.5 hover:bg-slate-900 rounded text-slate-400 hover:text-indigo-400 transition" title="預覽內容" onclick="previewFile('${file.id}')">
+                <i data-lucide="eye" class="w-4 h-4"></i>
+              </button>
+              <button class="p-1.5 hover:bg-slate-900 rounded text-slate-400 hover:text-emerald-400 transition ${file.status !== 'success' ? 'opacity-35 pointer-events-none' : ''}" title="下載單檔" onclick="downloadSingleFile('${file.id}')">
+                <i data-lucide="download" class="w-4 h-4"></i>
+              </button>
+              <button class="p-1.5 hover:bg-slate-900 rounded text-slate-400 hover:text-rose-400 transition" title="移除檔案" onclick="removeFile('${file.id}')">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        `;
+        
+        container.appendChild(item);
+      });
+
+      document.getElementById('stat-success').textContent = successCount;
+      document.getElementById('stat-error').textContent = errorCount;
+      document.getElementById('stat-pending').textContent = pendingCount;
+      document.getElementById('stat-total').textContent = `總計: ${fileQueue.length} 個檔案`;
+
+      btnZip.disabled = successCount === 0;
+      lucide.createIcons();
+    }
+
+    // 刪除個別檔案
+    function removeFile(id) {
+      fileQueue = fileQueue.filter(f => f.id !== id);
+      showToast('已移除該檔案', 'info');
+      updateFileListView();
+    }
+
+    // 清空所有檔案
+    function clearAllFiles() {
+      fileQueue = [];
+      showToast('已清空清單', 'info');
+      updateFileListView();
+    }
+
+    // 核心轉檔邏輯
+    function processAllFiles() {
+      if (fileQueue.length === 0) {
+        showToast('請先匯入任何 TXT / SRT 檔案', 'warning');
+        return;
+      }
+
+      const parseTimestamps = document.getElementById('parse-timestamps').checked;
+      const msPerChar = parseInt(document.getElementById('param-ms-per-char').value, 10) || 180;
+      const gapMs = parseInt(document.getElementById('param-gap').value, 10) || 100;
+      const minDurationMs = parseFloat(document.getElementById('param-min-sec').value) * 1000 || 1500;
+      const maxDurationMs = parseFloat(document.getElementById('param-max-sec').value) * 1000 || 6500;
+
+      const fixedDurationMs = parseFloat(document.getElementById('param-fixed-sec').value) * 1000 || 3000;
+      const fixedGapMs = parseInt(document.getElementById('param-fixed-gap').value, 10) || 100;
+
+      const startOffsetStr = document.getElementById('param-start-offset').value.trim();
+      const startOffsetMs = parseSrtTimeToMs(startOffsetStr) || 0;
+
+      showToast('開始進行批次轉檔作業...', 'info');
+
+      fileQueue.forEach(fileObj => {
+        try {
+          if (!fileObj.rawContent) {
+            fileObj.status = 'error';
+            fileObj.errorMessage = '檔案尚未完全載入';
+            return;
+          }
+
+          const rawContent = fileObj.rawContent;
+          
+          // 判斷檔案是否有任何時間軸資訊
+          const srtRangeRegexGlobal = /(\d{1,2}:\d{2}(?::\d{2})?(?:[,\.]\d{1,3})?)\s*-->\s*(\d{1,2}:\d{2}(?::\d{2})?(?:[,\.]\d{1,3})?)/;
+          const audacityRangeRegexGlobal = /(\d{1,2}:\d{2}(?::\d{2})?[,\.]\d{1,3})\s*[\s\t,;]\s*(\d{1,2}:\d{2}(?::\d{2})?[,\.]\d{1,3})/;
+          const hasTimecode = srtRangeRegexGlobal.test(rawContent) || audacityRangeRegexGlobal.test(rawContent);
+
+          // 【模式 A：自動辨識模式 且 檔案本身有時間軸區間】
+          if (conversionMode === 'auto' && hasTimecode) {
+            let parsedBlocks = parseSrtLike(rawContent);
+            if (parsedBlocks.length === 0) {
+              fileObj.status = 'error';
+              fileObj.errorMessage = '無法從檔案中解析出任何有效字幕區塊';
+              return;
+            }
+
+            // 特殊優化：套用語意多軌扁平結構還原演算法
+            parsedBlocks = mergeFlattenedBlocks(parsedBlocks);
+
+            let srtOutput = '';
+            let index = 1;
+
+            parsedBlocks.forEach(block => {
+              // 解析並套用微調時間偏移量
+              const blockStart = parseSrtTimeToMs(block.startTimeStr) + startOffsetMs;
+              const blockEnd = parseSrtTimeToMs(block.endTimeStr) + startOffsetMs;
+              const joinedText = block.textLines.join('\n').trim();
+
+              if (joinedText.length > 0) {
+                srtOutput += `${index++}\n`;
+                srtOutput += `${formatMsToSrtTime(blockStart)} --> ${formatMsToSrtTime(blockEnd)}\n`;
+                srtOutput += `${joinedText}\n\n`;
+              }
+            });
+
+            fileObj.srtContent = srtOutput.trim() + '\n';
+            fileObj.status = 'success';
+            fileObj.linesCount = parsedBlocks.length;
+          } 
+          // 【模式 B：純文字檔，或強制重新生成時間】
+          else {
+            let chunks = [];
+            if (splitMode === 'line') {
+              chunks = rawContent.split(/\r?\n/)
+                .map(line => line.trim())
+                .filter(line => line.length > 0);
+            } else {
+              chunks = rawContent.split(/\n\s*\n/)
+                .map(p => p.trim().replace(/\r?\n/g, ' '))
+                .filter(p => p.length > 0);
+            }
+
+            if (chunks.length === 0) {
+              fileObj.status = 'error';
+              fileObj.errorMessage = '內容中沒有有效文字';
+              return;
+            }
+
+            let srtBlocks = [];
+            let currentTimePointer = startOffsetMs;
+            let index = 1;
+
+            for (let i = 0; i < chunks.length; i++) {
+              let text = chunks[i];
+              let blockStartTime = currentTimePointer;
+              let blockEndTime = currentTimePointer;
+              let timeMatched = false;
+
+              // 單點時間標記偵測 (如 [00:12.30] 格式)
+              if (parseTimestamps) {
+                const timeRegex1 = /^\[(\d{2}):(\d{2})(?:\.(\d{2,3}))?\]\s*(.*)$/; 
+                const timeRegex2 = /^\((\d{2}):(\d{2})(?:\.(\d{2,3}))?\)\s*(.*)$/;
+                const timeRegex3 = /^(\d{2}):(\d{2}):(\d{2})[,\.](\d{3})\s*(.*)$/;
+
+                let match = text.match(timeRegex1) || text.match(timeRegex2);
+                if (match) {
+                  const mins = parseInt(match[1], 10);
+                  const secs = parseInt(match[2], 10);
+                  const msStr = match[3] || '0';
+                  const ms = parseInt(msStr.padEnd(3, '0').substring(0, 3), 10);
+                  
+                  const parsedMs = (mins * 60 + secs) * 1000 + ms;
+                  blockStartTime = parsedMs;
+                  text = match[4].trim();
+                  timeMatched = true;
+
+                  let estDuration = strategy === 'dynamic' 
+                    ? Math.max(minDurationMs, Math.min(maxDurationMs, text.length * msPerChar))
+                    : fixedDurationMs;
+                  blockEndTime = blockStartTime + estDuration;
+                } else {
+                  let match3 = text.match(timeRegex3);
+                  if (match3) {
+                    const hrs = parseInt(match3[1], 10);
+                    const mins = parseInt(match3[2], 10);
+                    const secs = parseInt(match3[3], 10);
+                    const ms = parseInt(match3[4], 10);
+
+                    const parsedMs = (hrs * 3600 + mins * 60 + secs) * 1000 + ms;
+                    blockStartTime = parsedMs;
+                    text = match3[5].trim();
+                    timeMatched = true;
+
+                    let estDuration = strategy === 'dynamic' 
+                      ? Math.max(minDurationMs, Math.min(maxDurationMs, text.length * msPerChar))
+                      : fixedDurationMs;
+                    blockEndTime = blockStartTime + estDuration;
+                  }
+                }
+              }
+
+              if (!timeMatched) {
+                let duration = 0;
+                if (strategy === 'dynamic') {
+                  duration = Math.max(minDurationMs, Math.min(maxDurationMs, text.length * msPerChar));
+                  blockEndTime = blockStartTime + duration;
+                  currentTimePointer = blockEndTime + gapMs;
+                } else {
+                  duration = fixedDurationMs;
+                  blockEndTime = blockStartTime + duration;
+                  currentTimePointer = blockEndTime + fixedGapMs;
+                }
+              } else {
+                currentTimePointer = blockEndTime + (strategy === 'dynamic' ? gapMs : fixedGapMs);
+              }
+
+              srtBlocks.push({
+                index: index++,
+                startTime: blockStartTime,
+                endTime: blockEndTime,
+                text: text
+              });
+            }
+
+            let srtOutput = '';
+            srtBlocks.forEach(block => {
+              srtOutput += `${block.index}\n`;
+              srtOutput += `${formatMsToSrtTime(block.startTime)} --> ${formatMsToSrtTime(block.endTime)}\n`;
+              srtOutput += `${block.text}\n\n`;
+            });
+
+            fileObj.srtContent = srtOutput.trim() + '\n';
+            fileObj.status = 'success';
+            fileObj.linesCount = srtBlocks.length;
+          }
+        } catch (error) {
+          console.error(error);
+          fileObj.status = 'error';
+          fileObj.errorMessage = error.message || '核心轉檔異常';
+        }
+      });
+
+      showToast('全部轉檔完成！', 'success');
+      updateFileListView();
+    }
+
+    // 毫秒轉 00:00:00,000 字串
+    function formatMsToSrtTime(ms) {
+      if (ms < 0) ms = 0;
+      const hours = Math.floor(ms / 3600000);
+      const minutes = Math.floor((ms % 3600000) / 60000);
+      const seconds = Math.floor((ms % 60000) / 1000);
+      const millis = ms % 1000;
+
+      return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')},${String(millis).padStart(3, '0')}`;
+    }
+
+    // 點擊預覽單一檔案
+    function previewFile(id) {
+      const file = fileQueue.find(f => f.id === id);
+      if (!file) return;
+
+      activePreviewFileId = id;
+      document.getElementById('preview-filename').textContent = file.name;
+      document.getElementById('preview-txt-box').value = file.rawContent || '';
+      
+      const countLabel = file.isSrtFormatDetected ? '組已有時間軸對應' : '行原始文字';
+      document.getElementById('preview-txt-lines').textContent = `${file.linesCount || 0} ${countLabel}`;
+      
+      if (file.status !== 'success') {
+        document.getElementById('preview-srt-box').value = '尚未執行轉檔。點擊左下角「開始批次轉檔」後即可在此預覽結果。';
+        document.getElementById('preview-status-tip').textContent = '小提示：請先在主頁面點擊轉檔。';
+      } else {
+        document.getElementById('preview-srt-box').value = file.srtContent;
+        if (file.isSrtFormatDetected && conversionMode === 'auto') {
+          document.getElementById('preview-status-tip').textContent = '✨ 成功！已為您智慧合併：音軌時間定位 + 族語 + 中文並排對照。';
+        } else {
+          document.getElementById('preview-status-tip').textContent = '✨ 成功！已自動幫您估算並分配好時間軸。';
+        }
+      }
+
+      document.getElementById('preview-modal').classList.remove('hidden');
+    }
+
+    // 關閉預覽彈出窗
+    function closePreviewModal() {
+      document.getElementById('preview-modal').classList.add('hidden');
+      activePreviewFileId = null;
+    }
+
+    // 複製預覽中的 SRT 至剪貼簿
+    function copySrtToClipboard() {
+      const srtBox = document.getElementById('preview-srt-box');
+      if (!srtBox.value || srtBox.value.startsWith('尚未執行')) {
+        showToast('無有效字幕可供複製', 'warning');
+        return;
+      }
+      
+      srtBox.select();
+      try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+          showToast('已複製 SRT 全文至剪貼簿', 'success');
+        } else {
+          showToast('無法複製內容', 'error');
+        }
+      } catch (err) {
+        showToast('您的瀏覽器不支援一鍵複製，請手動全選複製', 'warning');
+      }
+    }
+
+    // 在預覽視窗直接下載該 SRT
+    function downloadSingleFromPreview() {
+      if (!activePreviewFileId) return;
+      downloadSingleFile(activePreviewFileId);
+    }
+
+    // 下載單一 SRT 檔案
+    function downloadSingleFile(id) {
+      const file = fileQueue.find(f => f.id === id);
+      if (!file || file.status !== 'success') {
+        showToast('檔案尚未轉換成功，無法下載', 'warning');
+        return;
+      }
+
+      const srtName = file.name.replace(/\.txt$/i, '') + '.srt';
+      const blob = new Blob([file.srtContent], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = srtName;
+      a.click();
+      
+      URL.revokeObjectURL(url);
+      showToast(`已開始下載 ${srtName}`, 'success');
+    }
+
+    // 打包所有已轉檔字幕成一個 ZIP 下載
+    function downloadAllAsZip() {
+      const successFiles = fileQueue.filter(f => f.status === 'success');
+      if (successFiles.length === 0) {
+        showToast('沒有任何已轉檔成功的檔案可打包', 'warning');
+        return;
+      }
+
+      showToast('正在打包檔案壓縮檔，請稍候...', 'info');
+      const zip = new JSZip();
+
+      successFiles.forEach(file => {
+        // 副檔名一律轉換為 .srt
+        const srtName = file.name.replace(/\.(txt|srt)$/i, '') + '.srt';
+        zip.file(srtName, file.srtContent);
+      });
+
+      zip.generateAsync({ type: 'blob' }).then(function(content) {
+        const url = URL.createObjectURL(content);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'srt_subtitles_batch.zip';
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('批次壓縮包 (ZIP) 建立並已開始下載！', 'success');
+      }).catch(err => {
+        showToast('打包壓縮檔時發生異常: ' + err.message, 'error');
+      });
+    }
+
+    // 建立唯一的 ID
+    function generateUUID() {
+      return 'file-' + Math.random().toString(36).substring(2, 9);
+    }
+
+    // 自訂 Toast 通知系統
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      
+      let bgClass = 'bg-slate-900 border-slate-800';
+      let iconColor = 'text-indigo-400';
+      let iconName = 'info';
+
+      if (type === 'success') {
+        bgClass = 'bg-slate-900 border-emerald-800/80';
+        iconColor = 'text-emerald-400';
+        iconName = 'check-circle';
+      } else if (type === 'warning') {
+        bgClass = 'bg-slate-900 border-amber-800/80';
+        iconColor = 'text-amber-400';
+        iconName = 'alert-triangle';
+      } else if (type === 'error') {
+        bgClass = 'bg-slate-900 border-rose-800/80';
+        iconColor = 'text-rose-400';
+        iconName = 'x-circle';
+      }
+
+      toast.className = `flex items-center space-x-3 p-4 rounded-xl border ${bgClass} shadow-2xl pointer-events-auto min-w-[280px] max-w-sm transition-all duration-300 transform translate-y-2 opacity-0`;
+      
+      toast.innerHTML = `
+        <div class="${iconColor}">
+          <i data-lucide="${iconName}" class="w-5 h-5"></i>
+        </div>
+        <div class="text-xs font-semibold text-slate-200 flex-1">${message}</div>
+      `;
+
+      container.appendChild(toast);
+      lucide.createIcons();
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      }, 10);
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'scale-95');
+        setTimeout(() => {
+          toast.remove();
+        }, 300);
+      }, 3500);
+    }
+  </script>
+</body>
+</html>
